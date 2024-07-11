@@ -42,3 +42,8 @@ def loadData():
   vectorstore = Chroma.from_documents(documents=splits, embedding=OpenAIEmbeddings)
   retriever = vectorstore.as_retriever()
   return retriever
+
+def getRelevantDocs(query):
+  retriever = loadData()
+  relevant_documents = retriever.invoke(query)
+  return relevant_documents
