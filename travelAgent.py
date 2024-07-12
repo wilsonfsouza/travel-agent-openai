@@ -10,6 +10,9 @@ from langchain_community.vectorstores import Chroma
 import bs4
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableSequence
+
 load_dotenv()
 
 llm = ChatOpenAI(model="gpt-3.5-turbo", api_key=os.environ.get("OPENAI_API_KEY"))
@@ -47,3 +50,22 @@ def getRelevantDocs(query):
   retriever = loadData()
   relevant_documents = retriever.invoke(query)
   return relevant_documents
+
+def supervisorAgent(query, llm, webContext, relevant_documents):
+  prompt_template = """
+  You are the surpevisor of a travel agency. Your final answer must be a complete and detailed travel itinerary.
+  Use the context of events and flight ticket prices, the user input, and the relevant documents to elaborate the travel itinerary.
+  Context: {webContext}
+  Relevant documents: {relevant_documents}
+  User: {query}
+  Assistant:
+  """
+
+  prompt = PromptTemplate(
+    input_variables=['webContext', 'relevant_documents', 'query'],
+    template=prompt_template
+  )
+
+  sequence = RunnableSequence(prompt | llm)
+  response = sequence.invoke({"webContext": webContext, "relevant_documents": relevant_documents, "query": query})
+  return response
