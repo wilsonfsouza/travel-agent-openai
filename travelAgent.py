@@ -69,3 +69,11 @@ def supervisorAgent(query, llm, webContext, relevant_documents):
   sequence = RunnableSequence(prompt | llm)
   response = sequence.invoke({"webContext": webContext, "relevant_documents": relevant_documents, "query": query})
   return response
+
+def getResponse(query, llm):
+  webContext = researchAgent(query, llm)
+  relevant_documents = getRelevantDocs(query)
+  response = supervisorAgent(query, llm, webContext=webContext, relevant_documents=relevant_documents)
+  return response
+
+print(getResponse(query, llm))
