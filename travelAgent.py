@@ -17,22 +17,20 @@ load_dotenv()
 
 llm = ChatOpenAI(model="gpt-3.5-turbo", api_key=os.environ.get("OPENAI_API_KEY"))
 
-query = """"
-I will travel to Lima and Cuzco (Peru) mid May 2025 for 7 days.
-I want you to create a travel itinerary for me with historical sites, must see viewpoints, and cultural events that will be happening during the trip.
-Include the price for flight tickets from Redding, CA, United States to Lima, Peru.
-"""
+# query = """"
+# I will travel to Lima and Cuzco (Peru) mid May 2025 for 7 days.
+# I want you to create a travel itinerary for me with historical sites, must see viewpoints, and cultural events that will be happening during the trip.
+# Include the price for flight tickets from Redding, CA, United States to Lima, Peru.
+# """
 
 def researchAgent(query, llm):
   tools = load_tools(['ddg-search', 'wikipedia'], llm= llm)
   prompt = hub.pull("hwchase17/react")
   agent = create_react_agent(llm, tools, prompt)
-  agent_executor = AgentExecutor(agent=agent, tools=tools, prompt=prompt, verbose= True)
+  agent_executor = AgentExecutor(agent=agent, tools=tools, prompt=prompt)
   webContext = agent_executor.invoke({"input": query})
   return webContext['output']
 
-
-print(researchAgent(query, llm))
 
 def loadData():
   loader = WebBaseLoader(
@@ -76,4 +74,8 @@ def getResponse(query, llm):
   response = supervisorAgent(query, llm, webContext=webContext, relevant_documents=relevant_documents)
   return response
 
-print(getResponse(query, llm))
+
+def lambda_handler(event, context):
+  query = event.get('question')
+  response = getResponse(query, llm).content
+  return {"body": response, "status": 200}
