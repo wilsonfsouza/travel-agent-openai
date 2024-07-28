@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import os
+import json
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.agent_toolkits.load_tools import load_tools 
 from langchain.agents import create_react_agent, AgentExecutor
@@ -70,6 +71,17 @@ def getResponse(query, llm):
 
 
 def lambda_handler(event, context):
-  query = event.get('question')
+  # query = event.get('question')
+  body = json.load(event.get('body'), {})
+  query = body.get('question', 'Parameter question not provided')
   response = getResponse(query, llm).content
-  return {"body": response, "status": 200}
+  return {
+    "statusCode": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": json.dumps({
+      "message": "Task concluded successfully",
+      "details": response,
+    }), 
+  }
